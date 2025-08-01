@@ -1,5 +1,5 @@
 # Choose a base image.  Sensible options include ubuntu:xx.xx, nvidia/cuda:xx-cuddnx
-ARG BASE_IMAGE
+ARG BASE_IMAGE=nvidia/cuda:12.1.0-devel-ubuntu22.04
 
 ### Build Caddy with single port TLS redirect
 FROM --platform=$BUILDPLATFORM golang:1.23.4-bookworm AS caddy_builder
@@ -82,6 +82,7 @@ RUN \
         acl \
         ca-certificates \
         gpg-agent \
+        telnet \
         software-properties-common \
         locales \
         lsb-release \
@@ -149,6 +150,7 @@ RUN \
         clinfo \
         pocl-opencl-icd \
         opencl-headers \
+        awscli \
         ocl-icd-dev \
         ocl-icd-opencl-dev && \
     # Ensure TensorRT where applicable
@@ -171,6 +173,7 @@ RUN \
                 apt-mark hold libnvinfer8 libnvinfer-plugin8 libnvonnxparsers8; \
         fi \
     fi && \
+    apt-get install -y nodejs && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -295,7 +298,7 @@ RUN \
     rm -f /opt/syncthing.tar.gz
 
 ARG BASE_IMAGE
-ARG PYTHON_VERSION=3.10
+ARG PYTHON_VERSION=3.11.13
 ENV PYTHON_VERSION=${PYTHON_VERSION}
 
 RUN \
@@ -368,6 +371,10 @@ RUN \
             > /venv/main/bin/activate && \
         /opt/miniforge3/bin/conda clean -ay
 
+
+COPY ./.whl /wheels/
+COPY ./ray_script/ /workspace/
+
 RUN \
     set -euo pipefail && \
     . /venv/main/bin/activate && \
@@ -376,6 +383,8 @@ RUN \
         huggingface_hub[cli] \
         ipykernel \
         ipywidgets && \
+    uv pip install --no-cache-dir /wheels/*.whl && \
+    uv pip install notebook psutil aiohttp aiohttp_cors grpcio opencensus opentelemetry-api opentelemetry-sdk opentelemetry-exporter-prometheus prometheus_client pydantic opentelemetry-proto && \
     python -m ipykernel install \
         --name="main" \
         --display-name="Python3 (main venv)" && \
@@ -395,6 +404,7 @@ RUN \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+WORKDIR /
 ENV PATH=/opt/instance-tools/bin:${PATH}
 
 # Defend against environment clashes when syncing to volume
@@ -404,3 +414,5 @@ RUN \
 
 ENTRYPOINT ["/opt/instance-tools/bin/entrypoint.sh"]
 CMD []
+
+# docker buildx build --platform linux/amd64 -t freedomkwok/openrl-vastai:latest -f VastAIFull.Dockerfile .

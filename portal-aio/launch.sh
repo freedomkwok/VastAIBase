@@ -36,6 +36,12 @@ instance_portal() {
     /opt/portal-aio/caddy_manager/caddy run --config /etc/Caddyfile 2>&1 | tee -a /var/log/portal/caddy.log &
     PIDS+=($!)
 
+    # Wait a moment for caddy to start, then check for external port mappings
+    sleep 5
+    echo "Checking for external port mappings..." | tee -a /var/log/portal/portal.log
+    cd /opt/portal-aio || exit 1
+    /opt/portal-aio/venv/bin/python check_external_ports.py 2>&1 | tee -a /var/log/portal/portal.log
+
     cd /opt/portal-aio/tunnel_manager || exit 1
     /opt/portal-aio/venv/bin/fastapi run --host 127.0.0.1 --port 11112 tunnel_manager.py 2>&1 | tee -a /var/log/portal/tunnel-manager.log &
     PIDS+=($!)
