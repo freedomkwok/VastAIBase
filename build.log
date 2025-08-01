@@ -1,0 +1,1 @@
+docker build -t freedomkwok/cuda_12_1_py311_ray_proxy:3.0.0  -f cuda_12_1_py311_ray_proxy_Dockerfile .
