@@ -258,7 +258,7 @@ ARG TARGETARCH
 RUN \
     chown -R 0:0 /opt/portal-aio && \
     set -euo pipefail && \
-    uv venv --seed /opt/portal-aio/venv -p 3.11.13 && \
+    uv venv --seed /opt/portal-aio/venv -p 3.11 && \
     mkdir -m 770 -p /var/log/portal && \
     chown 0:0 /var/log/portal/ && \
     mkdir -p opt/instance-tools/bin/ && \
