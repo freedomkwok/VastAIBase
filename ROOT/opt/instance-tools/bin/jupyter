@@ -1,0 +1,20 @@
+#!/bin/bash
+
+type="$1"
+
+# Bail out if this is not a launch command
+if [[ $type != "notebook" ]] && [[ $type != "lab" ]]; then
+        exec /usr/local/bin/jupyter "$@"
+fi
+
+shift
+
+# Add some useful options to the default Jupyter startup
+set -- "$type" \
+  "--no-browser" \
+  "--ContentsManager.allow_hidden=True" \
+  "--ServerApp.root_dir=/" \
+  "--ServerApp.preferred_dir=${JUPYTER_DIR:-${WORKSPACE:-/}}" \
+  "$@"
+
+/usr/local/bin/jupyter "$@" 2>&1 | tee >(grep -v "health.ico" >> /var/log/portal/jupyter.log)
