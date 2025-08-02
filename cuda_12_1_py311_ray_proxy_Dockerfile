@@ -374,7 +374,7 @@ RUN \
 
 COPY ./.whl /wheels/
 COPY ./ray_script/ /workspace/
-WORKDIR /workspace/
+WORKDIR /workspace
 
 RUN \
     set -euo pipefail && \
