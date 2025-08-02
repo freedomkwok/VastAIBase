@@ -1,7 +1,7 @@
 # Choose a base image.  Sensible options include ubuntu:xx.xx, nvidia/cuda:xx-cuddnx
 ARG BASE_IMAGE=nvidia/cuda:12.1.0-devel-ubuntu22.04
 ARG PYTHON_VERSION=3.10
-
+ENV PYTHON_VERSION=${PYTHON_VERSION}
 
 ### Build Caddy with single port TLS redirect
 FROM --platform=$BUILDPLATFORM golang:1.23.4-bookworm AS caddy_builder
@@ -9,7 +9,6 @@ FROM --platform=$BUILDPLATFORM golang:1.23.4-bookworm AS caddy_builder
 # Install xcaddy for the current architecture
 RUN go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest
 
-ENV PYTHON_VERSION=${PYTHON_VERSION}
 # Build Caddy
 ENV CGO_ENABLED=0
 ARG TARGETARCH
@@ -252,7 +251,9 @@ RUN \
     (cd /opt/nvm/ && git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)`) && \
     source /opt/nvm/nvm.sh && \
     nvm install --lts
-
+    
+ARG PYTHON_VERSION=3.10
+ENV PYTHON_VERSION=${PYTHON_VERSION}
 # Add the 'service portal' web app into this container to avoid needing to specify in onstart.  
 # We will launch each component with supervisor - Not the standalone launch script.
 COPY ./portal-aio /opt/portal-aio
