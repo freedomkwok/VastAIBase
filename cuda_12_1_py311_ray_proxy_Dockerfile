@@ -415,5 +415,3 @@ RUN \
 
 ENTRYPOINT ["/opt/instance-tools/bin/entrypoint.sh"]
 CMD []
-
-# docker buildx build --platform linux/amd64 -t freedomkwok/openrl-vastai:latest -f VastAIFull.Dockerfile .

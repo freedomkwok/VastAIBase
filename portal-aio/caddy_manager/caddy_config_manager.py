@@ -3,12 +3,17 @@ import yaml
 import subprocess
 import time
 import shortuuid
-
+import logging
 CADDY_BIN = "/opt/portal-aio/caddy_manager/caddy"
 CADDY_CONFIG = "/etc/Caddyfile"
 CERT_PATH = "/etc/instance.crt"
 KEY_PATH = "/etc/instance.key"
 MAX_RETRIES = 5
+
+logging.basicConfig(level=logging.INFO, 
+                   format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger("log_monitor")
+
 
 def generate_port_mappings():
     """
@@ -89,7 +94,7 @@ def load_config():
     
     # Add generated ports to configuration
     config = add_generated_ports_to_config(config)
-    
+    logging.info(f"after add_generated_ports_to_config: {config}")
     # Save to file so user can edit before restarting container to pick up changes
     yaml_data = {"applications": config}
     with open(yaml_path, "w") as file:
@@ -210,12 +215,12 @@ def generate_caddyfile(config):
         }}
     }}
     '''
-
+    
     for app_name, app_config in config.items():
         external_port = app_config['external_port']
         internal_port = app_config['internal_port']
         hostname = app_config['hostname']
-
+        logger.info(f"external_port: {external_port}, internal_port: {internal_port}")
         # If the internal and external are the same or user has not exposed port, we cannot proxy (but we still need the config for Portal - For Jupyter)
         if external_port == internal_port or not os.environ.get(f"VAST_TCP_PORT_{external_port}"):
             continue
