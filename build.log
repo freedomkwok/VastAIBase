@@ -1,3 +1,5 @@
 docker build -t freedomkwok/cuda_12_1_py311_ray_proxy:3.0.0  -f cuda_12_1_py311_ray_proxy_Dockerfile .
-docker build --no-cache -t freedomkwok/cuda_12_1_py311_ray_proxy:3.0.0  -f cuda_12_1_py311_ray_proxy_Dockerfile .
 docker build -t freedomkwok/cuda_12_1_py310_ray_proxy:3.0.0  -f cuda_12_1_py310_ray_proxy_Dockerfile .
+docker build --no-cache -t freedomkwok/cuda_12_1_py311_ray_proxy:3.0.0  -f cuda_12_1_py311_ray_proxy_Dockerfile .
+
+docker buildx build --load --platform linux/amd64 -t freedomkwok/cuda_12_1_py310_ray_proxy:3.0.0  -f cuda_12_1_py310_ray_proxy_Dockerfile .
