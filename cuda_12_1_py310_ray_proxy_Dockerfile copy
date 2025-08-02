@@ -1,6 +1,6 @@
 # Choose a base image.  Sensible options include ubuntu:xx.xx, nvidia/cuda:xx-cuddnx
 ARG BASE_IMAGE=nvidia/cuda:12.1.0-devel-ubuntu22.04
-
+ARG PYTHON_VERSION=3.10
 ### Build Caddy with single port TLS redirect
 FROM --platform=$BUILDPLATFORM golang:1.23.4-bookworm AS caddy_builder
 
@@ -258,7 +258,7 @@ ARG TARGETARCH
 RUN \
     chown -R 0:0 /opt/portal-aio && \
     set -euo pipefail && \
-    uv venv --seed /opt/portal-aio/venv -p 3.11.13 && \
+    uv venv --seed /opt/portal-aio/venv -p $PYTHON_VERSION && \
     mkdir -m 770 -p /var/log/portal && \
     chown 0:0 /var/log/portal/ && \
     mkdir -p opt/instance-tools/bin/ && \
@@ -298,7 +298,6 @@ RUN \
     rm -f /opt/syncthing.tar.gz
 
 ARG BASE_IMAGE
-ARG PYTHON_VERSION=3.11.13
 ENV PYTHON_VERSION=${PYTHON_VERSION}
 
 RUN \
@@ -383,7 +382,7 @@ RUN \
         huggingface_hub[cli] \
         ipykernel \
         ipywidgets && \
-    uv pip install --no-cache-dir /wheels/*cp311*.whl && \
+    uv pip install --no-cache-dir /wheels/*cp310*.whl && \
     uv pip install notebook psutil aiohttp aiohttp_cors grpcio opencensus opentelemetry-api opentelemetry-sdk opentelemetry-exporter-prometheus prometheus_client pydantic opentelemetry-proto && \
     python -m ipykernel install \
         --name="main" \
