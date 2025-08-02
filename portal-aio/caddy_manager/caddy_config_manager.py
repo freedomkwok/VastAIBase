@@ -3,16 +3,11 @@ import yaml
 import subprocess
 import time
 import shortuuid
-import logging
 CADDY_BIN = "/opt/portal-aio/caddy_manager/caddy"
 CADDY_CONFIG = "/etc/Caddyfile"
 CERT_PATH = "/etc/instance.crt"
 KEY_PATH = "/etc/instance.key"
 MAX_RETRIES = 5
-
-logging.basicConfig(level=logging.INFO, 
-                   format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger("log_monitor")
 
 
 def generate_port_mappings():
@@ -215,7 +210,7 @@ def generate_caddyfile(config):
     }}
     '''
     
-    logging.info(f"after add_generated_ports_to_config: {config}")
+    print(f"after add_generated_ports_to_config: {config}")
     
     for app_name, app_config in config.items():
         external_port = app_config['external_port']
@@ -226,7 +221,7 @@ def generate_caddyfile(config):
         if external_port == internal_port or not os.environ.get(f"VAST_TCP_PORT_{external_port}"):
             continue
         
-        logger.info(f"internal_port: {internal_port}, external_port: {external_port}, VAST_TCP_PORT_{external_port}: {os.environ.get(f'VAST_TCP_PORT_{external_port}')}")
+        print(f"internal_port: {internal_port}, external_port: {external_port}, VAST_TCP_PORT_{external_port}: {os.environ.get(f'VAST_TCP_PORT_{external_port}')}")
         
         caddyfile += f":{external_port} {{\n"
         if enable_https:
