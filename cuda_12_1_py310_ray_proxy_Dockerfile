@@ -29,7 +29,7 @@ SHELL ["/bin/bash", "-c", "umask 002 && /bin/bash -c \"$@\"", "-"]
 RUN sed -i '1i umask 002' /root/.bashrc
 
 # Add some useful scripts and config files
-COPY ./ROOT/ /
+COPY --link ./ROOT/ /
 
 # Vast.ai environment variables used for Jupyter & Data sync
 ENV DATA_DIRECTORY=/workspace
