@@ -369,7 +369,10 @@ RUN \
             > /venv/main/bin/activate && \
         /opt/miniforge3/bin/conda clean -ay
 
-COPY ./OpenRL /workspace/OpenRL
+COPY ./OpenRL /workspace/OpenRL        
+COPY ./.whl /wheels/
+COPY ./ray_script/ /workspace/
+
 WORKDIR /workspace/OpenRL
 RUN \
     set -euo pipefail && \
@@ -379,6 +382,7 @@ RUN \
         huggingface_hub[cli] \
         ipykernel \
         ipywidgets && \
+    uv pip install --no-cache-dir /wheels/*cp311*.whl && \
     uv pip install torch torchvision wandb debugpy && \
     uv pip install -e .[vllm] && \
     uv pip install flash-attn --no-build-isolation && \
