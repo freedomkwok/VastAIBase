@@ -24,3 +24,4 @@ cat /etc/Caddyfile
 edit/opt/portal-aio/caddy_manager/caddy_config_manager.py
 
 /opt/portal-aio/venv/bin/python /opt/portal-aio/caddy_manager/caddy_config_manager.py 2>&1 | tee -a /var/log/portal/caddy2.log
+chmod -R +x ROOT/opt/instance-tools/bin/

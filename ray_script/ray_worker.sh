@@ -37,11 +37,11 @@ else
 fi
 
 PUBLIC_IP=$(curl -s ifconfig.me)
-
+LOCAL_IP=$(hostname -I | awk '{print $1}')
 # Set default values if not provided
 LOCAL_IP=${LOCAL_IP:-127.0.0.1}
-NODE_MANAGER_PORT=${NODE_MANAGER_PORT:-6379}
-OBJECT_MANAGER_PORT=${OBJECT_MANAGER_PORT:-8265}
+NODE_MANAGER_PORT=${RAY_NODE_MANAGER_PORT:-8002}
+OBJECT_MANAGER_PORT=${RAY_OBJECT_MANAGER_PORT:-8001}
 
 # Generate internal ports based on NUM_OF_PORTS and START_FROM_PORT
 NUM_OF_PORTS=${NUM_OF_PORTS:-20}
@@ -105,7 +105,7 @@ else
 fi
 
 ENV_STRING=$(IFS=' '; echo "${ENV_ARRAY[*]}")
-COMPLETE_COMMAND="$ENV_STRING ray start --address=\"$HEAD_ADDRESS\" --node-ip-address=$LOCAL_IP --node-manager-port=\"$NODE_MANAGER_PORT\" --object-manager-port=\"$OBJECT_MANAGER_PORT\" --worker-port-list=$INTERNAL_PORTS"
+COMPLETE_COMMAND="$ENV_STRING ray start --address=\"$HEAD_ADDRESS\" --node-ip-address=$LOCAL_IP --node-manager-port=\"$NODE_MANAGER_PORT\" --object-manager-port=\"$OBJECT_MANAGER_PORT\" --worker-port-list='$INTERNAL_PORTS'"
 
 # Print the complete command
 echo "Complete command: $COMPLETE_COMMAND"
