@@ -29,4 +29,3 @@ eval $COMPLETE_COMMAND
 
 echo "Running Ray Head on ${PUBLIC_IP}:${!PROXY_PORT_VAR}"
 echo "Dashboard: http://${PUBLIC_IP}:${!PROXY_DASHBOARD_PORT_VAR}"
-

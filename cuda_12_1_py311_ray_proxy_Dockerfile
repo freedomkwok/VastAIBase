@@ -298,7 +298,7 @@ RUN \
     rm -f /opt/syncthing.tar.gz
 
 ARG BASE_IMAGE
-ARG PYTHON_VERSION=3.11.13
+ARG PYTHON_VERSION=3.10
 ENV PYTHON_VERSION=${PYTHON_VERSION}
 
 RUN \
@@ -384,7 +384,7 @@ RUN \
         huggingface_hub[cli] \
         ipykernel \
         ipywidgets && \
-    uv pip install --no-cache-dir /wheels/*cp311*.whl && \
+    uv pip install --no-cache-dir /wheels/*cp310*.whl && \
     uv pip install notebook psutil aiohttp aiohttp_cors grpcio opencensus opentelemetry-api opentelemetry-sdk opentelemetry-exporter-prometheus prometheus_client pydantic opentelemetry-proto && \
     python -m ipykernel install \
         --name="main" \

@@ -3,98 +3,41 @@ import yaml
 import subprocess
 import time
 import shortuuid
+
 CADDY_BIN = "/opt/portal-aio/caddy_manager/caddy"
 CADDY_CONFIG = "/etc/Caddyfile"
 CERT_PATH = "/etc/instance.crt"
 KEY_PATH = "/etc/instance.key"
 MAX_RETRIES = 5
 
-
-def generate_port_mappings():
-    """
-    Generate internal ports based on NUM_OF_PORTS and START_PORT environment variables.
-    Set INTERNAL_PORTS environment variable with all generated internal ports.
-    External port mappings will be available later when Vast.ai assigns them.
-    """
-    num_of_ports = int(os.environ.get('NUM_OF_PORTS', '20'))
-    start_port = int(os.environ.get('START_PORT', '10000'))
-    
-    # Generate internal ports
-    internal_ports = list(range(start_port, start_port + num_of_ports))
-    
-    # Set INTERNAL_PORTS environment variable with all generated ports
-    internal_ports_str = ','.join(map(str, internal_ports))
-    os.environ['INTERNAL_PORTS'] = internal_ports_str
-    print(f"Generated {len(internal_ports)} internal ports: {internal_ports_str}")
-    
-    return internal_ports
-
-
-def add_generated_ports_to_config(config):
-    """
-    Add generated port mappings to the portal configuration if they're not already present.
-    This allows automatic discovery and configuration of available ports.
-    Note: External ports will be assigned later by Vast.ai infrastructure.
-    """
-    # Check if auto-adding ports is enabled
-
-    
-    # Get existing internal ports from config
-    existing_internal_ports = set()
-    for app_config in config.values():
-        existing_internal_ports.add(app_config['internal_port'])
-    # Add new ports that aren't already configured
-    added_count = 0
-    for internal_port in generate_port_mappings():
-        # Create a new app entry for this port
-        # External port will be assigned later by Vast.ai
-        if internal_port not in existing_internal_ports:
-            app_name = f"auto_port_{internal_port}"
-            config[app_name] = {
-                'hostname': 'localhost',
-                'external_port': internal_port,  # Will be updated when external port is assigned
-                'internal_port': internal_port,
-                'open_path': '/',
-                'name': app_name
-            }
-            added_count += 1
-            print(f"Auto-added port mapping: {app_name} (Internal: {internal_port}, External: TBD)")
-    
-    if added_count > 0:
-        print(f"Added {added_count} new port mappings to configuration")
-    
-    return config
-
 def load_config():
     yaml_path = '/etc/portal.yaml'
     if os.path.exists(yaml_path):
         with open(yaml_path, 'r') as file:
-            config = yaml.safe_load(file)['applications']
-    else:
-        apps_string = os.environ.get('PORTAL_CONFIG', '')
-        if not apps_string:
-            raise ValueError("No configuration found in YAML or environment variable")
-        
-        config = {}
-        for app_string in apps_string.split('|'):
-            hostname, ext_port, int_port, path, name = app_string.split(':', 4)
-            
-            config[name] = {
-                'hostname': hostname,
-                'external_port': int(ext_port),
-                'internal_port': int(int_port),
-                'open_path': str(path),
-                'name': name
-            }
+            return yaml.safe_load(file)['applications']
     
-    # Add generated ports to configuration
-    config = add_generated_ports_to_config(config)
+    apps_string = os.environ.get('PORTAL_CONFIG', '')
+    if not apps_string:
+        raise ValueError("No configuration found in YAML or environment variable")
+    
+    apps = {}
+    for app_string in apps_string.split('|'):
+        hostname, ext_port, int_port, path, name = app_string.split(':', 4)
+        
+        apps[name] = {
+            'hostname': hostname,
+            'external_port': int(ext_port),
+            'internal_port': int(int_port),
+            'open_path': str(path),
+            'name': name
+        }
+    
     # Save to file so user can edit before restarting container to pick up changes
-    yaml_data = {"applications": config}
+    yaml_data = {"applications": apps}
     with open(yaml_path, "w") as file:
         yaml.dump(yaml_data, file, default_flow_style=False, sort_keys=False)
     
-    return config
+    return apps
 
 def validate_cert_and_key():
     try:
@@ -209,20 +152,16 @@ def generate_caddyfile(config):
         }}
     }}
     '''
-    
-    print(f"after add_generated_ports_to_config: {config}")
-    
+
     for app_name, app_config in config.items():
         external_port = app_config['external_port']
         internal_port = app_config['internal_port']
         hostname = app_config['hostname']
-        
+
         # If the internal and external are the same or user has not exposed port, we cannot proxy (but we still need the config for Portal - For Jupyter)
         if external_port == internal_port or not os.environ.get(f"VAST_TCP_PORT_{external_port}"):
             continue
-        
-        print(f"internal_port: {internal_port}, external_port: {external_port}, VAST_TCP_PORT_{external_port}: {os.environ.get(f'VAST_TCP_PORT_{external_port}')}")
-        
+
         caddyfile += f":{external_port} {{\n"
         if enable_https:
             caddyfile += f'    tls {CERT_PATH} {KEY_PATH}\n'
