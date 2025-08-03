@@ -12,16 +12,15 @@ docker build --no-cache -t freedomkwok/cuda_12_1_py311_ray_proxy:3.0.0  -f cuda_
 
 docker buildx build --load --platform linux/amd64 -t freedomkwok/cuda_12_1_py310_ray_proxy:3.0.0  -f cuda_12_1_py310_ray_proxy_Dockerfile .
 
+ls -la /var/log/portal/
+ps aux | grep supervisor
+supervisorctl status
 
-   ls -la /var/log/portal/
-   ps aux | grep supervisor
-   supervisorctl status
 
+cat /var/log/portal/caddy.log
+cat /etc/portal.yaml
+cat /etc/Caddyfile
 
-   cat /var/log/portal/caddy.log
-   cat /etc/portal.yaml
-   cat /etc/Caddyfile
-
-   edit/opt/portal-aio/caddy_manager/caddy_config_manager.py
+edit/opt/portal-aio/caddy_manager/caddy_config_manager.py
 
 /opt/portal-aio/venv/bin/python /opt/portal-aio/caddy_manager/caddy_config_manager.py 2>&1 | tee -a /var/log/portal/caddy2.log

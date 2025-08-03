@@ -1,0 +1,57 @@
+# Ignore Python cache and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.ipynb_checkpoints
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore virtual environments
+.env
+.venv
+env/
+venv/
+*.conda
+*.egg-info/
+
+# Ignore large folders that don’t need to be copied into image
+data/
+logs/
+models/
+checkpoints/
+wandb/
+tmp/
+output/
+
+# Git
+.git/
+.gitignore
+
+# Ignore Docker artifacts
+Dockerfile
+.dockerignore
+
+# Ignore IDE/editor configs
+.vscode/
+.idea/
+
+# Exclude heavy folders in subdirectory
+OpenRL/.git
+OpenRL/.venv
+OpenRL/.cache
+OpenRL/logs
+OpenRL/verl_checkpoints
+OpenRL/outputs
+OpenRL/models
+OpenRL/wandb
+OpenRL/data
+OpenRL/data
+
+*.ipynb_checkpoints
+*.pt
+*.pth
+*.onnx
+*.h5
