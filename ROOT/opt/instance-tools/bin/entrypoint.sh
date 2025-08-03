@@ -350,6 +350,8 @@ sync_environment() {
 
     rm -rf /.uv >/dev/null 2>&1
     ln -s "${uv_dir}" /.uv
+
+    cd /workspace/OpenRL && git remote add origin https://$GH_TOKEN@github.com/freedomkwok/OpenRL.git && git pull origin main
 }
 
 main "$@"
