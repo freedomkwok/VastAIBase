@@ -12,22 +12,42 @@ MAX_RETRIES = 5
 
 def generate_port_mappings():
     """
-    Generate internal ports based on NUM_OF_PORTS and START_PORT environment variables.
-    Set INTERNAL_PORTS environment variable with all generated internal ports.
-    External port mappings will be available later when Vast.ai assigns them.
+    Generate internal ports based on NUM_OF_PORTS and START_FROM_PORT environment variables.
+    Check which internal ports have corresponding VAST_TCP_PORT_[INTERNAL_PORT] variables.
+    Set INTERNAL_PORTS and EXTERNAL_PORTS environment variables with only the ports that have external mappings.
     """
     num_of_ports = int(os.environ.get('NUM_OF_PORTS', '20'))
-    start_port = int(os.environ.get('START_PORT', '10000'))
+    start_from_port = int(os.environ.get('START_FROM_PORT', '10000'))
     
     # Generate internal ports
-    internal_ports = list(range(start_port, start_port + num_of_ports))
+    internal_ports = list(range(start_from_port, start_from_port + num_of_ports))
     
-    # Set INTERNAL_PORTS environment variable with all generated ports
-    internal_ports_str = ','.join(map(str, internal_ports))
-    os.environ['INTERNAL_PORTS'] = internal_ports_str
-    print(f"Generated {len(internal_ports)} internal ports: {internal_ports_str}")
+    # Check which internal ports have external mappings
+    available_internal_ports = []
+    available_external_ports = []
     
-    return internal_ports
+    for internal_port in internal_ports:
+        external_port_env = f"VAST_TCP_PORT_{internal_port}"
+        external_port = os.environ.get(external_port_env)
+        if external_port:
+            available_internal_ports.append(internal_port)
+            available_external_ports.append(int(external_port))
+    
+    # Set environment variables with only the ports that have external mappings
+    if available_internal_ports:
+        internal_ports_str = ','.join(map(str, available_internal_ports))
+        external_ports_str = ','.join(map(str, available_external_ports))
+        os.environ['INTERNAL_PORTS'] = internal_ports_str
+        os.environ['EXTERNAL_PORTS'] = external_ports_str
+        print(f"Found {len(available_internal_ports)} ports with external mappings:")
+        print(f"Internal ports: {internal_ports_str}")
+        print(f"External ports: {external_ports_str}")
+    else:
+        os.environ['INTERNAL_PORTS'] = ''
+        os.environ['EXTERNAL_PORTS'] = ''
+        print("No internal ports with external mappings found")
+    
+    return available_internal_ports, available_external_ports
 
 
 def add_generated_ports_to_config(config):
@@ -37,28 +57,39 @@ def add_generated_ports_to_config(config):
     Note: External ports will be assigned later by Vast.ai infrastructure.
     """
     # Check if auto-adding ports is enabled
-
+    auto_add_ports = os.environ.get('AUTO_ADD_GENERATED_PORTS', 'true').lower() == 'true'
+    if not auto_add_ports:
+        return config
     
     # Get existing internal ports from config
     existing_internal_ports = set()
     for app_config in config.values():
         existing_internal_ports.add(app_config['internal_port'])
+    
+    # Get available internal ports (only those with external mappings)
+    available_internal_ports = generate_port_mappings()[0]
+    if not available_internal_ports:
+        return config
+    
     # Add new ports that aren't already configured
     added_count = 0
-    for internal_port in generate_port_mappings():
-        # Create a new app entry for this port
-        # External port will be assigned later by Vast.ai
+    for internal_port in available_internal_ports:
         if internal_port not in existing_internal_ports:
+            # Get the external port for this internal port
+            external_port_env = f"VAST_TCP_PORT_{internal_port}"
+            external_port = os.environ.get(external_port_env)
+            
+            # Create a new app entry for this port
             app_name = f"auto_port_{internal_port}"
             config[app_name] = {
                 'hostname': 'localhost',
-                'external_port': internal_port,  # Will be updated when external port is assigned
+                'external_port': int(external_port) if external_port else internal_port,
                 'internal_port': internal_port,
                 'open_path': '/',
                 'name': app_name
             }
             added_count += 1
-            print(f"Auto-added port mapping: {app_name} (Internal: {internal_port}, External: TBD)")
+            print(f"Auto-added port mapping: {app_name} (Internal: {internal_port}, External: {external_port if external_port else 'TBD'})")
     
     if added_count > 0:
         print(f"Added {added_count} new port mappings to configuration")
@@ -349,7 +380,7 @@ def refresh_config_with_external_ports():
         yaml_data = yaml.safe_load(file)
         config = yaml_data['applications']
     
-    internal_ports = get_available_internal_ports()
+    internal_ports = generate_port_mappings()[0] # Use the first return value for internal ports
     if not internal_ports:
         print("No internal ports found")
         return False
@@ -358,13 +389,13 @@ def refresh_config_with_external_ports():
     
     # Check each internal port for external mapping
     for internal_port in internal_ports:
-        external_port = get_external_port_for_internal(internal_port)
+        external_port = os.environ.get(f"VAST_TCP_PORT_{internal_port}")
         if external_port:
             # Update configuration if this port is in the config
             app_name = f"auto_port_{internal_port}"
             if app_name in config:
-                if config[app_name]['external_port'] != external_port:
-                    config[app_name]['external_port'] = external_port
+                if config[app_name]['external_port'] != int(external_port):
+                    config[app_name]['external_port'] = int(external_port)
                     updated_count += 1
                     print(f"Updated {app_name}: Internal {internal_port} -> External {external_port}")
     
@@ -398,7 +429,7 @@ def main():
         subprocess.run([CADDY_BIN, 'fmt', '--overwrite', CADDY_CONFIG])
         
         # Show port mapping information
-        internal_ports = get_available_internal_ports()
+        internal_ports = generate_port_mappings()[0] # Use the first return value for internal ports
         if internal_ports:
             print("*****")
             print("* Port Mapping Information:")
