@@ -25,3 +25,15 @@ edit/opt/portal-aio/caddy_manager/caddy_config_manager.py
 
 /opt/portal-aio/venv/bin/python /opt/portal-aio/caddy_manager/caddy_config_manager.py 2>&1 | tee -a /var/log/portal/caddy2.log
 chmod -R +x ROOT/opt/instance-tools/bin/
+
+
+PROXY_NODE_IP_ADDRESS=136.60.217.200 \
+PROXY_NODE_MANAGER_PORT=18404 \
+PROXY_OBJECT_MANAGER_PORT=18469 \
+INTERNAL_PORTS=10000,10002,10003,10004,10005,10006,10007,10008,10009,10010,10011,10012,10013,10014 \
+EXTERNAL_PORTS=18465,18555,18519,18518,18664,18595,18565,18495,18594,18564,18402,18458,18412,18478 \
+ray start --address="73.241.137.103:41194" --node-ip-address=172.17.0.3 \
+--node-manager-port="6379" --object-manager-port="8081" --worker-port-list='10000,10002,10003,10004,10005,10006,10007,10008,10009,10010,10011,10012,10013,10014'
+
+
+docker build -t  freedomkwok/openrl-vastai:0.0.4  -f VastAIFull.Dockerfile .
