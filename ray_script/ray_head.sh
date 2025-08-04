@@ -1,5 +1,6 @@
 #!/bin/bash
 PUBLIC_IP=$(curl -s ifconfig.me)
+LOCAL_IP=$(hostname -I | awk '{print $1}')
 
 # Set default values if not provided
 RAY_PORT=${RAY_PORT:-6379}
