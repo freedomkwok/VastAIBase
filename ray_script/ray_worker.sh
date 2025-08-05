@@ -24,7 +24,7 @@ echo "Connecting to Ray head at: $HEAD_ADDRESS"
 echo "Head IP: $HEAD_IP"
 echo "Head Port: $HEAD_PORT"
 
-# Test connectivity to head
+# Connectivity check
 echo "Testing connectivity to head..."
 if command -v nc >/dev/null 2>&1; then
     if nc -z "$HEAD_IP" "$HEAD_PORT" 2>/dev/null; then
@@ -37,35 +37,47 @@ else
 fi
 
 PUBLIC_IP=$(curl -s ifconfig.me)
-
-# Set default values if not provided
 LOCAL_IP=${LOCAL_IP:-127.0.0.1}
-NODE_MANAGER_PORT=${NODE_MANAGER_PORT:-6379}
-OBJECT_MANAGER_PORT=${OBJECT_MANAGER_PORT:-8265}
-
-# Generate internal ports based on NUM_OF_PORTS and START_FROM_PORT
-NUM_OF_PORTS=${NUM_OF_PORTS:-20}
-START_FROM_PORT=${START_FROM_PORT:-10000}
+OBJECT_MANAGER_PORT=${RAY_OBJECT_MANAGER_PORT:-8076}
+NODE_MANAGER_PORT=${RAY_NODE_MANAGER_PORT:-8077}
+NUM_OF_PORTS=${NUM_OF_PORTS:-15}
+START_FROM_PORT=${START_FROM_PORT:-17000}
 
 echo "Generating ports: NUM_OF_PORTS=$NUM_OF_PORTS, START_FROM_PORT=$START_FROM_PORT"
 
-# Generate internal ports and check for external mappings
 available_internal_ports=()
 available_external_ports=()
+
+# === BEGIN PORT CHECK ===
+is_port_in_use() {
+    local port=$1
+    if command -v lsof >/dev/null 2>&1; then
+        lsof -iTCP:$port -sTCP:LISTEN -t >/dev/null 2>&1
+    elif command -v netstat >/dev/null 2>&1; then
+        netstat -an | grep -q ":$port .*LISTEN"
+    else
+        echo "Warning: Cannot check ports (missing lsof/netstat)"
+        return 1
+    fi
+}
+# === END PORT CHECK ===
 
 for ((i=0; i<NUM_OF_PORTS; i++)); do
     internal_port=$((START_FROM_PORT + i))
     external_port_env="VAST_TCP_PORT_${internal_port}"
-    external_port="${!external_port_env}"
-    
+    external_port="${!external_port_env:-}"
+
     if [[ -n "$external_port" ]]; then
-        available_internal_ports+=($internal_port)
-        available_external_ports+=($external_port)
-        echo "Found mapping: Internal $internal_port -> External $external_port"
+        if is_port_in_use "$internal_port"; then
+            echo "⚠️  Skipping used port: Internal $internal_port is in use"
+        else
+            available_internal_ports+=($internal_port)
+            available_external_ports+=($external_port)
+            echo "✓ Mapping: Internal $internal_port -> External $external_port"
+        fi
     fi
 done
 
-# Set environment variables
 if [[ ${#available_internal_ports[@]} -gt 0 ]]; then
     INTERNAL_PORTS=$(IFS=','; echo "${available_internal_ports[*]}")
     EXTERNAL_PORTS=$(IFS=','; echo "${available_external_ports[*]}")
@@ -76,7 +88,7 @@ if [[ ${#available_internal_ports[@]} -gt 0 ]]; then
 else
     export INTERNAL_PORTS=""
     export EXTERNAL_PORTS=""
-    echo "No external port mappings found"
+    echo "No usable port mappings found"
 fi
 
 NODE_MGR_PROXY_PORT_VAR="VAST_TCP_PORT_${NODE_MANAGER_PORT}"
@@ -91,8 +103,8 @@ echo "External Object Manager Port: $(eval echo \$$OBJ_MGR_PROXY_PORT_VAR)"
 
 ENV_ARRAY=(
     "PROXY_NODE_IP_ADDRESS=$PUBLIC_IP"
-    "PROXY_NODE_MANAGER_PORT=${!NODE_MGR_PROXY_PORT_VAR}"
-    "PROXY_OBJECT_MANAGER_PORT=${!OBJ_MGR_PROXY_PORT_VAR}"
+    "PROXY_NODE_MANAGER_PORT=${!NODE_MGR_PROXY_PORT_VAR:-}"
+    "PROXY_OBJECT_MANAGER_PORT=${!OBJ_MGR_PROXY_PORT_VAR:-}"
     "INTERNAL_PORTS=${INTERNAL_PORTS}"
     "EXTERNAL_PORTS=${EXTERNAL_PORTS}"
 )
@@ -107,11 +119,5 @@ fi
 ENV_STRING=$(IFS=' '; echo "${ENV_ARRAY[*]}")
 COMPLETE_COMMAND="$ENV_STRING ray start --address=\"$HEAD_ADDRESS\" --node-ip-address=$LOCAL_IP --node-manager-port=\"$NODE_MANAGER_PORT\" --object-manager-port=\"$OBJECT_MANAGER_PORT\" --worker-port-list=$INTERNAL_PORTS"
 
-# Print the complete command
 echo "Complete command: $COMPLETE_COMMAND"
-
-# Execute the command
 eval $COMPLETE_COMMAND
-
-
-
