@@ -150,6 +150,7 @@ RUN \
         clinfo \
         pocl-opencl-icd \
         opencl-headers \
+        awscli \
         ocl-icd-dev \
         ocl-icd-opencl-dev && \
     # Ensure TensorRT where applicable
@@ -172,6 +173,7 @@ RUN \
                 apt-mark hold libnvinfer8 libnvinfer-plugin8 libnvonnxparsers8; \
         fi \
     fi && \
+    apt-get install -y nodejs && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -369,6 +371,8 @@ RUN \
             > /venv/main/bin/activate && \
         /opt/miniforge3/bin/conda clean -ay
 
+COPY ./.whl /wheels/
+COPY ./ray_script/ /workspace/
 COPY ./OpenRL /workspace/OpenRL
 WORKDIR /workspace/OpenRL
 RUN \
@@ -380,6 +384,9 @@ RUN \
         ipykernel \
         ipywidgets && \
     uv pip install torch torchvision wandb debugpy && \
+    uv pip install --no-cache-dir /wheels/*cp310*.whl && \
+    rm -rf /wheels && \
+    uv pip install notebook psutil aiohttp aiohttp_cors grpcio opencensus opentelemetry-api opentelemetry-sdk opentelemetry-exporter-prometheus prometheus_client pydantic opentelemetry-proto && \
     uv pip install -e .[vllm] && \
     uv pip install flash-attn --no-build-isolation && \
     python -m ipykernel install \
