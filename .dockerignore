@@ -48,7 +48,7 @@ OpenRL/outputs
 OpenRL/models
 OpenRL/wandb
 OpenRL/data
-OpenRL/data
+!OpenRL/data/_grpo
 
 *.ipynb_checkpoints
 *.pt
