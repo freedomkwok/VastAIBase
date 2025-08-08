@@ -25,6 +25,8 @@ docker buildx build --load --platform linux/amd64 -t freedomkwok/cuda_12_1_py310
    edit/opt/portal-aio/caddy_manager/caddy_config_manager.py
 
 /opt/portal-aio/venv/bin/python /opt/portal-aio/caddy_manager/caddy_config_manager.py 2>&1 | tee -a /var/log/portal/caddy2.log
+212121   git
+# docker build -t freedomkwok/openrl-vastai:0.0.5 -f VastAIFull.Dockerfile 
 
-git clone https://freedomkwok:$GH_TOKEN@github.com/freedomkwok/OpenRL.git
-# docker build -t freedomkwok/openrl-vastai:0.0.5 -f VastAIFull.Dockerfile .
+chmod -R a+rx ./ROOT/opt/instance-tools/bin
+chmod +x /opt/instance-tools/bin/env-hash
