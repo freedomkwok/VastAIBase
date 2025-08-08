@@ -408,6 +408,13 @@ RUN \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+RUN cd /workspace/OpenRL/openmanus_rl/agentgym/agentenv-gmail_calendar && \
+    /opt/miniforge3/bin/conda create -p /venv/agent_server python="3.11" -y && \
+    /venv/agent_server/bin/activate && \
+    pip install -e . && \
+    deactivate && \
+    ln -s /venv/agent_server/bin/agentenv_gmail_calendar /usr/local/bin/agentenv_gmail_calendar
+
 WORKDIR /
 ENV PATH=/opt/instance-tools/bin:${PATH}
 
