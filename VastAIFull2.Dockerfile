@@ -387,8 +387,8 @@ RUN \
     uv pip install --no-cache-dir /wheels/*cp310*.whl && \
     rm -rf /wheels && \
     uv pip install notebook psutil aiohttp aiohttp_cors grpcio opencensus opentelemetry-api opentelemetry-sdk opentelemetry-exporter-prometheus prometheus_client pydantic opentelemetry-proto && \
-    uv pip install -e . && \
-    uv pip3 install flash-attn --no-build-isolation && \
+    uv pip install -e .[vllm] && \
+    uv pip install flash-attn --no-build-isolation && \
     python -m ipykernel install \
         --name="main" \
         --display-name="Python3 (main venv)" && \
