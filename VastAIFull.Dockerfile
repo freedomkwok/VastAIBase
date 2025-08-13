@@ -386,8 +386,8 @@ RUN \
     pip3 install torch torchvision wandb debugpy && \
     uv pip install --no-cache-dir /wheels/*cp310*.whl && \
     rm -rf /wheels && \
+    uv pip install -e .[vllm] && \
     uv pip install notebook psutil aiohttp aiohttp_cors grpcio opencensus opentelemetry-api opentelemetry-sdk opentelemetry-exporter-prometheus prometheus_client pydantic opentelemetry-proto && \
-    uv pip install -e . --no-deps && \
     pip3 install flash-attn --no-build-isolation && \
     python -m ipykernel install \
         --name="main" \
