@@ -383,11 +383,11 @@ RUN \
         huggingface_hub[cli] \
         ipykernel \
         ipywidgets && \
-    pip3 install torch torchvision wandb debugpy && \
-    uv pip install --no-cache-dir /wheels/*cp310*.whl && \
+    pip3 install wandb debugpy && \
+    pip install --no-cache-dir /wheels/*cp310*.whl && \
     rm -rf /wheels && \
-    uv pip install notebook psutil aiohttp aiohttp_cors grpcio opencensus opentelemetry-api opentelemetry-sdk opentelemetry-exporter-prometheus prometheus_client pydantic opentelemetry-proto && \
-    uv pip install -e . --no-deps && \
+    pip install notebook psutil aiohttp aiohttp_cors grpcio opencensus opentelemetry-api opentelemetry-sdk opentelemetry-exporter-prometheus prometheus_client pydantic opentelemetry-proto && \
+    pip3 install -e . && \
     pip3 install flash-attn --no-build-isolation && \
     python -m ipykernel install \
         --name="main" \
