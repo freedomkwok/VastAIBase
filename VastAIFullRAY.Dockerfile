@@ -371,9 +371,8 @@ RUN \
             > /venv/main/bin/activate && \
         /opt/miniforge3/bin/conda clean -ay
 
-COPY ./.whl /wheels/
 COPY ./ray_script/ /workspace/
-COPY ./OpenRL /workspace/OpenRL
+COPY ./OpenRL_RAY /workspace/OpenRL
 WORKDIR /workspace/OpenRL
 RUN \
     set -euo pipefail && \
